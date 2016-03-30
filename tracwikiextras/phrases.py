@@ -28,7 +28,6 @@ from genshi.core import Markup
 from trac.config import ListOption
 from trac.core import implements, Component
 from trac.util.compat import cleandoc
-from trac.web.api import IRequestFilter
 from trac.web.chrome import ITemplateProvider, add_stylesheet
 from trac.wiki import IWikiSyntaxProvider, IWikiMacroProvider, format_to_html
 
@@ -43,7 +42,7 @@ class Phrases(Component):
     phrases.
     """
     
-    implements(IRequestFilter, ITemplateProvider, IWikiSyntaxProvider,
+    implements(ITemplateProvider, IWikiSyntaxProvider,
                IWikiMacroProvider)
 
     fixme_phrases = ListOption('wikiextras', 'fixme_phrases', 'BUG, FIXME',
@@ -80,16 +79,6 @@ class Phrases(Component):
                     self.text['%s%s%s' % (d1, phrase, d2)] = html
                 for d2 in [':']:
                     self.text['%s%s' % (phrase, d2)] = html
-
-    # IRequestFilter methods
-
-    #noinspection PyUnusedLocal
-    def pre_process_request(self, req, handler):
-        return handler
-
-    def post_process_request(self, req, template, data, content_type):
-        add_stylesheet(req, 'wikiextras/css/phrases.css')
-        return template, data, content_type
 
     # ITemplateProvider methods
 
@@ -130,6 +119,7 @@ class Phrases(Component):
 
     #noinspection PyUnusedLocal
     def expand_macro(self, formatter, name, content, args=None):
+        add_stylesheet(formatter.req, 'wikiextras/css/phrases.css')
         t = [render_table(p, '1',
                           lambda s: self._format_phrase(formatter, s, None))
              for p in [self.fixme_phrases, self.todo_phrases,

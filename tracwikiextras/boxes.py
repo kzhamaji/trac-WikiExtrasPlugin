@@ -20,7 +20,7 @@ from genshi.builder import tag
 from trac.config import BoolOption, IntOption
 from trac.core import implements, Component
 from trac.util.compat import cleandoc
-from trac.web.api import IRequestFilter, IRequestHandler
+from trac.web.api import IRequestHandler
 from trac.web.chrome import ITemplateProvider, add_stylesheet
 from trac.wiki import IWikiMacroProvider, format_to_html, parse_args
 
@@ -65,7 +65,7 @@ class Boxes(Component):
     uses the icon library.
     """
 
-    implements(IRequestFilter, IRequestHandler, ITemplateProvider,
+    implements(IRequestHandler, ITemplateProvider,
                IWikiMacroProvider)
 
     rbox_width = IntOption('wikiextras', 'rbox_width', 300,
@@ -108,19 +108,6 @@ class Boxes(Component):
             self.word2type[name] = name
             for synonym in data[2]:
                 self.word2type[synonym] = name
-
-    # IRequestFilter methods
-
-    #noinspection PyUnusedLocal
-    def pre_process_request(self, req, handler):
-        return handler
-
-    def post_process_request(self, req, template, data, content_type):
-        add_stylesheet(req, 'wikiextras/css/boxes.css')
-        add_stylesheet(req, '/wikiextras/dynamicboxes.css')
-        if self.shadowless:
-            add_stylesheet(req, 'wikiextras/css/boxes-shadowless.css')
-        return template, data, content_type
 
     # IRequestHandler methods
 
@@ -346,6 +333,12 @@ class Boxes(Component):
         style_list = []
         if args is None:
             content, args = parse_args(content)
+
+        # Add style sheet
+        add_stylesheet(formatter.req, 'wikiextras/css/boxes.css')
+        add_stylesheet(formatter.req, '/wikiextras/dynamicboxes.css')
+        if self.shadowless:
+            add_stylesheet(formatter.req, 'wikiextras/css/boxes-shadowless.css')
 
         #noinspection PyArgumentList
         if not Icons(self.env).shadowless:
